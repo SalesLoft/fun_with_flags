@@ -141,10 +141,16 @@ defmodule FunWithFlags.Actor.Percentage do
   # %_ratio : 1.0 = 16_bits : 65_536
   #
   defp _actor_score(string) do
-    <<score :: size(16), _rest :: binary>> = :crypto.hash(:sha256, string)
-    score / 65_536
+    case Application.get_env(:fun_with_flags, :actor_score_algo_fn, []) do
+      algo_fn when is_function(algo_fn, 1) -> algo_fn.(string)
+      _ -> _default_actor_score(string)
+    end
   end
 
+  defp _default_actor_score(string) do
+    <<score::size(16), _rest::binary>> = :crypto.hash(:sha256, string)
+    score / 65_536
+  end
 
   # To verify that the distribution is uniform
   #
